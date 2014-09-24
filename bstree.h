@@ -241,6 +241,62 @@ private:
     Node* _rootNode() const {
         return _root;
     }
+
+    //---------------------------------------------------------------------
+    Node* _findNode(const TKey & key, Node* node_root) const {
+        if (!node_root) {
+            return NULL;
+        }
+
+        // Если узел содержит искомый ключ, вернуть указатель на него
+        if (node_root->key() == key) {
+            return node_root;
+        }
+        // Иначе продолжить поиск в поддеревьях, вызывая функцию рекурсивно
+        else {
+            Node* node_found_in_left_subtree = _findNode(key, node_root->leftChild());
+            Node* node_found_in_right_subtree = _findNode(key, node_root->rightChild());
+            if (node_found_in_left_subtree) {
+                return node_found_in_left_subtree;
+            } else {
+                return node_found_in_right_subtree;
+            }
+        }
+    }
+
+    //---------------------------------------------------------------------
+    void _insertNode(Node* node_to_insert, Node* node_root) {
+        // Если ключ нового узла меньше ключа вершины поддерева
+        if (node_to_insert->key() < node_root->key()) {
+            // и левое поддерево отсутствует
+            if (!node_root->leftChild()) {
+                // сделать новый узел новым корнем левого поддерева
+                node_root->setLeftChild(node_to_insert);
+            }
+            // Иначе продолжить поиск позиции для вставки по левому поддереву
+            else {
+                _insertNode(node_to_insert, node_root->leftChild());
+            }
+        }
+        // Если ключ нового узла больше ключа вершины поддерева
+        else if (node_root->key() < node_to_insert->key()) {
+            // и правое поддерево отсутствует
+            if (!node_root->rightChild()) {
+                // сделать новый узел новым корнем правого поддерева
+                node_root->setRightChild(node_to_insert);
+            }
+            else {
+                // Иначе продолжить поиск позиции для вставки по правому поддереву
+                _insertNode(node_to_insert, node_root->rightChild());
+            }
+        }
+    }
+
+    //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
 public:
     BSTree()
         : _root(NULL)
@@ -273,48 +329,14 @@ public:
              * узлы двоичного дерева поиска упорядочены так, что ключ любого
              * родительского узла больше ключа любого узла-потомка из левой ветки
              * и меньше ключа любого узла-потомка из правой ветки. */
-            Node* next_node = _root;
-            Node* parent = NULL;
-            while (next_node) {
-                parent = next_node;
-                if (next_node->key() < node_to_insert->key()) {
-                    next_node = next_node->rightChild();
-                }
-                else {
-                    next_node = next_node->leftChild();
-                }
-            }
-
-            if (node_to_insert->key() < parent->key()) {
-                parent->setLeftChild(node_to_insert);
-            }
-            else {
-                parent->setRightChild(node_to_insert);
-            }
+            _insertNode(node_to_insert, _rootNode());
         }
     }
 
     //---------------------------------------------------------------------
     Node* findNode(const TKey & key) const {
-        Node* node_next = _root;
-        while (node_next) {
-            // Если узел с ключом найден, прекратить поиск
-            if (node_next->key() == key) {
-                break;
-            }
-
-            // Продолжить поиск узла ниже в подходящей ветке
-            if (node_next->key() < key) {
-                node_next = node_next->rightChild();
-            }
-            else {
-                node_next = node_next->leftChild();
-            }
-        }
-
-        /* Вернуть найденный узел.
-         * Если он не найден или дерево пусто, будет возвращено значение NULL */
-        return node_next;
+        // Произвести поиск узла рекурсивно, начиная с корня
+        return _findNode(key, _rootNode());
     }
 
     //---------------------------------------------------------------------
