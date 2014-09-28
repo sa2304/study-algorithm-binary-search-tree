@@ -10,6 +10,8 @@ int main()
     TestBSTree test;
     test.testInsert();
     test.testRemove();
+    test.testCount();
+    test.testClear();
 
     system("pause");
 

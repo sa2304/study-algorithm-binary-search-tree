@@ -12,7 +12,7 @@ bool TestBSTree::testInsert() {
 
     BSTree<int, int> tree;
     tree.insert(key_3, val_3);
-    BSTree<int, int>::Node* root_node = tree.findNode(key_3);
+    BSTree<int, int>::Node* root_node = tree._findNode(key_3, tree._rootNode());
     if (!(root_node && root_node->key() == key_3)) {
         _notifyTestFailed();
         return false;
@@ -21,7 +21,7 @@ bool TestBSTree::testInsert() {
     int key_2 = 2;
     int val_2 = key_2;
     tree.insert(key_2, val_2);
-    BSTree<int, int>::Node* node_2 = tree.findNode(key_2);
+    BSTree<int, int>::Node* node_2 = tree._findNode(key_2, tree._rootNode());
     /* Проверить, найден ли node_2, имеет ли его ключ верное значение и
          * находится ли он в верной позиции (является левым потомком корня) */
     if (  ! ( node_2 &&
@@ -34,7 +34,7 @@ bool TestBSTree::testInsert() {
     int key_5 = 5;
     int val_5 = key_5;
     tree.insert(key_5, val_5);
-    BSTree<int, int>::Node* node_5 = tree.findNode(key_5);
+    BSTree<int, int>::Node* node_5 = tree._findNode(key_5, tree._rootNode());
     /* Проверить, найден ли node_5, имеет ли его ключ верное значение и
          * находится ли он в верной позиции (является правым потомком корня) */
     if (  ! ( node_5 &&
@@ -221,8 +221,8 @@ bool TestBSTree::testRemove() {
     tree_1b1.insert(x, x);
     tree_1b1.insert(b, b);
     tree_1b1.remove(x);
-    bool is_node_x_not_found_in_1b1 = (tree_1b1.findNode(x) == NULL);
-    bool is_node_b_new_root_of_1b1 = (tree_1b1.findNode(b) == tree_1b1._rootNode());
+    bool is_node_x_not_found_in_1b1 = (tree_1b1._findNode(x, tree_1b1._rootNode()) == NULL);
+    bool is_node_b_new_root_of_1b1 = (tree_1b1._findNode(b, tree_1b1._rootNode()) == tree_1b1._rootNode());
     if ( ! (is_node_b_new_root_of_1b1 && is_node_x_not_found_in_1b1)   ) {
         _notifyTestFailed("tree.1b1 not passed the test");
         return false;
@@ -472,8 +472,63 @@ bool TestBSTree::testRemove() {
 }
 
 //-----------------------------------------------------------------------------
+bool TestBSTree::testCount() {
+    cout << "Running count() test...";
+
+    BSTree<int, int> tree;
+    int nodes_count = 20;
+    for (int i = 0; i < nodes_count; ++i) {
+        tree.insert(i, i);
+    }
+
+    if (tree.count() != nodes_count) {
+        _notifyTestFailed();
+        return false;
+    }
+
+    _testPassed();
+    return true;
+}
+
 //-----------------------------------------------------------------------------
+bool TestBSTree::testClear() {
+    cout << "Running clear() test...";
+
+    BSTree<int, int> tree;
+    int nodes_count = 20;
+    for (int i = 0; i < nodes_count; ++i) {
+        tree.insert(i, i);
+    }
+
+    tree.clear();
+    if (tree.count()) {
+        _notifyTestFailed();
+        return false;
+    }
+
+    _testPassed();
+    return true;
+}
+
 //-----------------------------------------------------------------------------
+bool TestBSTree::testArrayOperator() {
+    BSTree<int, int> tree;
+    tree[1] = 1;
+    if (1 != tree[1]) {
+        _notifyTestFailed();
+        return false;
+    }
+
+    tree[1] = 0;
+    if (0 != tree[1]) {
+        _notifyTestFailed();
+        return false;
+    }
+
+    _testPassed();
+    return true;
+}
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

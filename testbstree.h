@@ -3,6 +3,7 @@
 
 #include "bstree.h"
 #include <iostream>
+
 using namespace std;
 
 /** Класс представляет собой набор автоматизированных тестов для методов класса BSTree
@@ -16,9 +17,11 @@ public:
 
     bool testInsert();
     bool testRemove();
+    bool testCount();
+    bool testClear();
+    bool testArrayOperator();
 
 private:
-    static BSTree<int, int> *_buildSampleTree();
 
     void _notifyTestFailed(std::string info = "") {
         cout << "!FAILED!";
