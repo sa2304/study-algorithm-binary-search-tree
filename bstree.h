@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <stack>
 using namespace std;
 
 template <class TKey, class TValue>
@@ -113,6 +114,20 @@ private:
         }
 
         //---------------------------------------------------------------------
+        /** Возвращает TRUE, если узел является левым потомком своего родителя */
+        bool isLeftChild() const {
+            return (parent() != NULL &&
+                    parent()->leftChild() == this);
+        }
+
+        //---------------------------------------------------------------------
+        /** Возвращает TRUE, если узел является правым потомком своего родителя */
+        bool isRightChild() const {
+            return (parent() != NULL &&
+                    parent()->rightChild() == this);
+        }
+
+        //---------------------------------------------------------------------
         /** Устанавливает указатель на родительский узел */
         void setParent(Node* node) {
             _parent = node;
@@ -158,6 +173,20 @@ private:
             return ( (leftChild() == child) ||
                     (rightChild() == child) );
         }
+
+        //---------------------------------------------------------------------
+        /** Возвращает глубину, на которой находится узел в дереве */
+        int level() const {
+            Node* node_parent = this->parent();
+            int lvl = 0;
+            while (node_parent) {
+                ++lvl;
+                node_parent = node_parent->parent();
+            }
+
+            return lvl;
+        }
+
 
     private:
         Node* _left_child;
@@ -285,30 +314,30 @@ private:
     }
 
     //---------------------------------------------------------------------
-    /** Ищет узел с заданным ключом в поддереве
+    /** Ищет узел с заданным ключом в дереве
      *
      * @param key Ключ для поиска
-     * @param node_root Корень поддерева
      */
-    Node* _findNode(const TKey & key, Node* node_root) const {
-        if (!node_root) {
-            return NULL;
-        }
+    Node* _findNode(const TKey & key) const {
+        Node* node_next = _root;
+        while (node_next) {
+            // Если узел с ключом найден, прекратить поиск
+            if (node_next->key() == key) {
+                break;
+            }
 
-        // Если узел содержит искомый ключ, вернуть указатель на него
-        if (node_root->key() == key) {
-            return node_root;
-        }
-        // Иначе продолжить поиск в поддеревьях, вызывая функцию рекурсивно
-        else {
-            Node* node_found_in_left_subtree = _findNode(key, node_root->leftChild());
-            Node* node_found_in_right_subtree = _findNode(key, node_root->rightChild());
-            if (node_found_in_left_subtree) {
-                return node_found_in_left_subtree;
-            } else {
-                return node_found_in_right_subtree;
+            // Продолжить поиск узла ниже в подходящей ветке
+            if (node_next->key() < key) {
+                node_next = node_next->rightChild();
+            }
+            else {
+                node_next = node_next->leftChild();
             }
         }
+
+        /* Вернуть найденный узел.
+         * Если он не найден или дерево пусто, будет возвращено значение NULL */
+        return node_next;
     }
 
     //---------------------------------------------------------------------
@@ -358,7 +387,42 @@ private:
         return left_children_count + right_children_count + 1;
     }
 
+    ///////////////////////////////////////////////////////////////////////
+    struct node_descriptor {
+        Node* node;
+        int level;
+
+        node_descriptor()
+            : node(NULL),
+              level(0)
+        {  }
+
+        //---------------------------------------------------------------------
+        bool isValid() {
+            return (NULL == node);
+        }
+    };
+    ///////////////////////////////////////////////////////////////////////
     //---------------------------------------------------------------------
+    node_descriptor _getNodeMaxDepth() {
+        node_descriptor desc;
+        if(!isEmpty()) {
+            iterator iter(this);
+            while (iter.isValid()) {
+                Node* node = iter._currentNodePointer();
+                int node_level = node->level();
+                if (desc.level < node_level) {
+                    desc.node = node;
+                    desc.level = node_level;
+                }
+
+                iter.next();
+            }
+        }
+
+        return desc;
+    }
+
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
@@ -394,7 +458,24 @@ public:
              * узлы двоичного дерева поиска упорядочены так, что ключ любого
              * родительского узла больше ключа любого узла-потомка из левой ветки
              * и меньше ключа любого узла-потомка из правой ветки. */
-            _insertNode(node_to_insert, _rootNode());
+            Node* next_node = _root;
+            Node* parent = NULL;
+            while (next_node) {
+                parent = next_node;
+                if (next_node->key() < node_to_insert->key()) {
+                    next_node = next_node->rightChild();
+                }
+                else {
+                    next_node = next_node->leftChild();
+                }
+            }
+
+            if (node_to_insert->key() < parent->key()) {
+                parent->setLeftChild(node_to_insert);
+            }
+            else {
+                parent->setRightChild(node_to_insert);
+            }
         }
     }
 
@@ -409,7 +490,7 @@ public:
     /** Удаляет из дерева узел с указанным ключом, если таковой имеется */
     void remove(TKey key) {
             // Найти элемент с заданным ключом
-        Node* node_to_remove = _findNode(key, _rootNode());
+        Node* node_to_remove = _findNode(key);
         // Если узел найден
         if (node_to_remove) {
             _removeNode(node_to_remove);
@@ -430,30 +511,19 @@ public:
             _removeNode(_root);
         }
     }
+
     //---------------------------------------------------------------------
-    /** Оператор, позволяющий работать с ммножеством узлов дерева как с массивом пар ключ/значение
-     *
-     * Например, для дерева, кранящего целочисленные ключи и строковые значения <int, std::string>
-     * можно использовать в коде такие выражения:
-     *
-     * tree[1] = "one";
-     * tree[2] = "two";
-     * tree[3] = "three";
-     * tree[7] = "seven";
-     *
-     * автоматически создавая новые узлы и инициализируя их значениями, или перезаписывая уже существующие
-     *
-     * tree[1] = "один";
-     */
-    TValue & operator[] (TKey key) {
-        Node* node = _findNode(key, _rootNode());
-        /* Если узел с запрошенным ключом отсутствует, создать новый
-         * с неинициализированным значением и вернуть ссылку на него */
-        if(NULL == node) {
-            insert(key, new TValue());
-            node = _findNode(key, _rootNode());
+    /** Обходит узлы дерева с помощью итератора, выводя их содержимое */
+    void print() {
+        if (!isEmpty()) {
+            iterator iter(this);
+            while(iter.hasNext()) {
+                cout << iter.key() << ": " << iter.value() << endl;
+                iter.next();
+            };
+            // Вывод последнего узла
+            cout << iter.key() << ": " << iter.value() << endl;
         }
-        return node->_value;
     }
 
     //---------------------------------------------------------------------
@@ -477,7 +547,135 @@ public:
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
-    //---------------------------------------------------------------------
+
+    ///////////////////////////////////////////////////////////////////////
+    class iterator {
+        BSTree<TKey, TValue>* _tree;
+        Node* _node_current_ptr;    /// Внутренний указатель итератора, с помощью которого производится обход дерева
+        Node* _node_last_seen;  /// Текущий узел с точки зрения клиента/кода, использующего итератор
+        std::stack<Node*> _st_nodes_ahead;
+
+        /** Устанавливает итератор в начальное состояние, когда тот
+         * указывает на крайнего левого потомка в левом поддереве */
+        void _init() {
+            _setCurrentNodePointer(_tree->_rootNode());
+            next();
+        }
+
+        //---------------------------------------------------------------------
+        Node* _currentNodePointer() const {
+            return _node_current_ptr;
+        }
+
+        //---------------------------------------------------------------------
+        void _setCurrentNodePointer(Node* node) {
+            _node_current_ptr = node;
+        }
+
+        //---------------------------------------------------------------------
+        Node* _lastSeenNode() const {
+            return _node_last_seen;
+        }
+
+        //---------------------------------------------------------------------
+        void _setLastSeenNode(Node* node) {
+            _node_last_seen = node;
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+
+
+    public:
+        iterator(BSTree<TKey, TValue>* tree)
+            : _tree(tree),
+              _node_current_ptr(NULL),
+              _node_last_seen(NULL) {
+            _init();
+        }
+
+        //---------------------------------------------------------------------
+        /** Перемещает итератор к следующему узлу, если он доступен
+         *
+         * Вызов next() для итератора, который уже указывает на последний узел,
+         * ни к чему не приводит */
+        void next() {
+            if (hasNext()) {
+                // Спускаться по левой ветви до конца
+                while (_currentNodePointer() != NULL) {
+                    _st_nodes_ahead.push(_currentNodePointer());
+                    _setCurrentNodePointer(_currentNodePointer()->leftChild());
+                }
+
+                Node* node = NULL;
+                if (!_st_nodes_ahead.empty()) {
+                    // Снять со стека следующий узел
+                    _setCurrentNodePointer(_st_nodes_ahead.top());
+                    _st_nodes_ahead.pop();
+
+                    // Отметить его как текущий для клиента
+                    node = _currentNodePointer();
+                    _setLastSeenNode(node);
+
+                    // Переместить внутренний указатель итератора далее для обхода правого поддерева
+                    _setCurrentNodePointer(_currentNodePointer()->rightChild());
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        /** Возвращает TRUE, если доступ к итератору корректенб иначе - FALSE
+         *
+         * Метод не является индикатором конца итератора, то есть конструкция
+         *
+         * while (iter.isValid()) { ... }
+         *
+         * на корректном/непустом дереве никогда не завершится */
+        bool isValid() const {
+            return _lastSeenNode() != NULL;
+        }
+
+        //---------------------------------------------------------------------
+        /** Возвращает TRUE, если еще остались узлы для обхода */
+        bool hasNext() const {
+            return (!_st_nodes_ahead.empty() || (_currentNodePointer() != NULL));
+        }
+
+        //---------------------------------------------------------------------
+        TValue operator*() {
+            return value();
+        }
+
+        //---------------------------------------------------------------------
+        TKey key() const {
+            return _lastSeenNode()->key();
+        }
+
+        //---------------------------------------------------------------------
+        TValue value() const {
+            return _lastSeenNode()->value();
+        }
+
+        //---------------------------------------------------------------------
+        int nodeDepth() const {
+            int depth = -1;
+            depth = _lastSeenNode()->level();
+
+            return depth;
+        }
+
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        //---------------------------------------------------------------------
+        friend class BSTree;
+
+    };
+    friend class iterator;
 
     friend class TestBSTree;
 };

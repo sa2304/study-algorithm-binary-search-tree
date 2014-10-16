@@ -3,8 +3,27 @@
 #include "testbstree.h"
 using namespace std;
 
+
+
+
+
+void testAll();
+
+static BSTree<int, int> tree;
+
+//-----------------------------------------------------------------------------
 int main()
 {
+    TestBSTree test;
+    test.runMainMenu();
+    PAUSE();
+
+    return 0;
+}
+
+
+//-----------------------------------------------------------------------------
+void testAll() {
     cout << "Hello World!" << endl;
 
     TestBSTree test;
@@ -12,9 +31,18 @@ int main()
     test.testRemove();
     test.testCount();
     test.testClear();
+    test.testIterator();
+    test.testMaxDepth();
 
-    system("pause");
-
-    return 0;
+    BSTree<int, string> tree;
+    tree.insert(1, "one");
+    tree.insert(2, "two");
+    tree.insert(3, "three");
+    tree.insert(4, "four");
+    tree.insert(5, "five");
+    tree.insert(6, "six");
+    tree.insert(7, "seven");
+    tree.insert(8, "eight");
+    tree.insert(9, "nine");
+    tree.print();
 }
-

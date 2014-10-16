@@ -1,7 +1,19 @@
 #include "testbstree.h"
 
-TestBSTree::TestBSTree()
-{
+// Инициализация констант класса
+const string TestBSTree::MenuItemTitleActionAddNode = "Add Node";
+const string TestBSTree::MenuItemTitleActionRemoveNode = "Remove Node";
+const string TestBSTree::MenuItemTitleActionPrintAllNodes = "Print All Nodes";
+const string TestBSTree::MenuItemTitleActionPrintNodesCount = "Print Nodes Count";
+const string TestBSTree::MenuItemTitleActionTestIsTreeEmpty = "Test If Tree Is Empty";
+const string TestBSTree::MenuItemTitleActionFindData = "Find Data By Key";
+const string TestBSTree::MenuItemTitleActionClearTree = "Clear Tree";
+const string TestBSTree::MenuItemTitleActionGetNodeMaxDepth = "Find Deepest Node";
+const string TestBSTree::MenuItemTitleActionDumpTreeStructure = "Dump Tree Structure";
+const string TestBSTree::MenuItemTitleActionExit = "Exit";
+
+//-----------------------------------------------------------------------------
+TestBSTree::TestBSTree() {
 }
 
 //-----------------------------------------------------------------------------
@@ -12,7 +24,7 @@ bool TestBSTree::testInsert() {
 
     BSTree<int, int> tree;
     tree.insert(key_3, val_3);
-    BSTree<int, int>::Node* root_node = tree._findNode(key_3, tree._rootNode());
+    BSTree<int, int>::Node* root_node = tree._findNode(key_3);
     if (!(root_node && root_node->key() == key_3)) {
         _notifyTestFailed();
         return false;
@@ -21,7 +33,7 @@ bool TestBSTree::testInsert() {
     int key_2 = 2;
     int val_2 = key_2;
     tree.insert(key_2, val_2);
-    BSTree<int, int>::Node* node_2 = tree._findNode(key_2, tree._rootNode());
+    BSTree<int, int>::Node* node_2 = tree._findNode(key_2);
     /* Проверить, найден ли node_2, имеет ли его ключ верное значение и
          * находится ли он в верной позиции (является левым потомком корня) */
     if (  ! ( node_2 &&
@@ -34,7 +46,7 @@ bool TestBSTree::testInsert() {
     int key_5 = 5;
     int val_5 = key_5;
     tree.insert(key_5, val_5);
-    BSTree<int, int>::Node* node_5 = tree._findNode(key_5, tree._rootNode());
+    BSTree<int, int>::Node* node_5 = tree._findNode(key_5);
     /* Проверить, найден ли node_5, имеет ли его ключ верное значение и
          * находится ли он в верной позиции (является правым потомком корня) */
     if (  ! ( node_5 &&
@@ -221,8 +233,8 @@ bool TestBSTree::testRemove() {
     tree_1b1.insert(x, x);
     tree_1b1.insert(b, b);
     tree_1b1.remove(x);
-    bool is_node_x_not_found_in_1b1 = (tree_1b1._findNode(x, tree_1b1._rootNode()) == NULL);
-    bool is_node_b_new_root_of_1b1 = (tree_1b1._findNode(b, tree_1b1._rootNode()) == tree_1b1._rootNode());
+    bool is_node_x_not_found_in_1b1 = (tree_1b1._findNode(x) == NULL);
+    bool is_node_b_new_root_of_1b1 = (tree_1b1._findNode(b) == tree_1b1._rootNode());
     if ( ! (is_node_b_new_root_of_1b1 && is_node_x_not_found_in_1b1)   ) {
         _notifyTestFailed("tree.1b1 not passed the test");
         return false;
@@ -237,8 +249,8 @@ bool TestBSTree::testRemove() {
     tree_1b2.insert(x, x);
     tree_1b2.insert(a, a);
     tree_1b2.remove(x);
-    bool is_node_x_not_found_in_1b2 = (tree_1b2.findNode(x) == NULL);
-    bool is_node_a_new_root_of_1b2 = (tree_1b2.findNode(a) == tree_1b2._rootNode());
+    bool is_node_x_not_found_in_1b2 = (tree_1b2._findNode(x) == NULL);
+    bool is_node_a_new_root_of_1b2 = (tree_1b2._findNode(a) == tree_1b2._rootNode());
     if ( ! (is_node_x_not_found_in_1b2 && is_node_a_new_root_of_1b2)  ) {
         _notifyTestFailed("tree.1b2 not passed the test");
         return false;
@@ -255,8 +267,8 @@ bool TestBSTree::testRemove() {
     tree_1c.insert(a, a);
     tree_1c.insert(b, b);
     tree_1c.remove(x);
-    bool is_node_x_not_found_in_1c = (tree_1c.findNode(x) == NULL);
-    bool is_node_b_new_root_of_1c = (tree_1c.findNode(b) == tree_1c._rootNode());
+    bool is_node_x_not_found_in_1c = (tree_1c._findNode(x) == NULL);
+    bool is_node_b_new_root_of_1c = (tree_1c._findNode(b) == tree_1c._rootNode());
     if ( ! (is_node_x_not_found_in_1c && is_node_b_new_root_of_1c)  ) {
         _notifyTestFailed("tree.1c not passed the test");
         return false;
@@ -272,7 +284,7 @@ bool TestBSTree::testRemove() {
     tree_2a1.insert(c, c);
     tree_2a1.insert(x, x);
     tree_2a1.remove(x);
-    bool is_node_x_not_found_in_2a1 = (tree_2a1.findNode(x) == NULL);
+    bool is_node_x_not_found_in_2a1 = (tree_2a1._findNode(x) == NULL);
     if ( ! is_node_x_not_found_in_2a1 ) {
         _notifyTestFailed("tree.2a1 not passed the test");
         return false;
@@ -287,7 +299,7 @@ bool TestBSTree::testRemove() {
     tree_2a2.insert(b, b);
     tree_2a2.insert(x, x);
     tree_2a2.remove(x);
-    bool is_node_x_not_found_in_2a2 = (tree_2a2.findNode(x) == NULL);
+    bool is_node_x_not_found_in_2a2 = (tree_2a2._findNode(x) == NULL);
     if ( ! is_node_x_not_found_in_2a2 ) {
         _notifyTestFailed("tree.2a2 not passed the test");
         return false;
@@ -305,8 +317,8 @@ bool TestBSTree::testRemove() {
     tree_2b1.insert(x, x);
     tree_2b1.insert(b, b);
     tree_2b1.remove(x);
-    bool is_node_x_not_found_in_2b1 = (tree_2b1.findNode(x) == NULL);
-    BSTree<int, int>::Node* node_c_in_2b1 = tree_2b1.findNode(c);
+    bool is_node_x_not_found_in_2b1 = (tree_2b1._findNode(x) == NULL);
+    BSTree<int, int>::Node* node_c_in_2b1 = tree_2b1._findNode(c);
     bool is_node_c_root_in_2b1 = (node_c_in_2b1 &&
                                   node_c_in_2b1->isRoot());
     bool is_node_b_right_child_of_c_in_2b1 = (node_c_in_2b1->rightChild() &&
@@ -328,12 +340,12 @@ bool TestBSTree::testRemove() {
     BSTree<int, int> tree_2b2;
     tree_2b2.insert(c, c);
     tree_2b2.insert(x, x);
-    BSTree<int, int>::Node* node_x_in_2b2 = tree_2b2.findNode(x);
+    BSTree<int, int>::Node* node_x_in_2b2 = tree_2b2._findNode(x);
     BSTree<int, int>::Node* node_a_in_2b2 = new BSTree<int, int>::Node(a, a);
     node_x_in_2b2->setLeftChild(node_a_in_2b2);
     tree_2b2.remove(x);
-    bool is_node_x_not_found_in_2b2 = (tree_2b2.findNode(x) == NULL);
-    BSTree<int, int>::Node* node_c_in_2b2 = tree_2b2.findNode(c);
+    bool is_node_x_not_found_in_2b2 = (tree_2b2._findNode(x) == NULL);
+    BSTree<int, int>::Node* node_c_in_2b2 = tree_2b2._findNode(c);
     bool is_node_c_root_in_2b2 = (node_c_in_2b2 &&
                                   node_c_in_2b2->isRoot());
     bool is_node_a_right_child_of_c_in_2b2 = (node_c_in_2b2->rightChild() &&
@@ -358,11 +370,11 @@ bool TestBSTree::testRemove() {
     tree_2b3.insert(x, x);
     tree_2b3.insert(d, d);
     tree_2b3.remove(x);
-    bool is_node_x_not_found_in_2b3 = (tree_2b3.findNode(x) == NULL);
-    BSTree<int, int>::Node* node_b_in_2b3 = tree_2b3.findNode(b);
+    bool is_node_x_not_found_in_2b3 = (tree_2b3._findNode(x) == NULL);
+    BSTree<int, int>::Node* node_b_in_2b3 = tree_2b3._findNode(b);
     bool is_node_b_root_in_2b3 = (node_b_in_2b3 &&
                                   tree_2b3._rootNode() == node_b_in_2b3);
-    BSTree<int, int>::Node* node_d_in_2b3 = tree_2b3.findNode(d);
+    BSTree<int, int>::Node* node_d_in_2b3 = tree_2b3._findNode(d);
     bool is_node_d_left_child_of_b_in_2b3 = (node_d_in_2b3 &&
                                              node_b_in_2b3->leftChild() == node_d_in_2b3);
     if ( ! (is_node_x_not_found_in_2b3 &&
@@ -386,11 +398,11 @@ bool TestBSTree::testRemove() {
     tree_2b4.insert(x, x);
     tree_2b4.insert(a, a);
     tree_2b4.remove(x);
-    bool is_node_x_not_found_in_2b4 = (tree_2b4.findNode(x) == NULL);
-    BSTree<int, int>::Node* node_b_in_2b4 = tree_2b4.findNode(b);
+    bool is_node_x_not_found_in_2b4 = (tree_2b4._findNode(x) == NULL);
+    BSTree<int, int>::Node* node_b_in_2b4 = tree_2b4._findNode(b);
     bool is_node_b_root_in_2b4 = (node_b_in_2b4 &&
                                   tree_2b4._rootNode() == node_b_in_2b4);
-    BSTree<int, int>::Node* node_a_in_2b4 = tree_2b4.findNode(a);
+    BSTree<int, int>::Node* node_a_in_2b4 = tree_2b4._findNode(a);
     bool is_node_a_left_child_of_b_in_2b4 = (node_a_in_2b4 &&
                                              node_b_in_2b4->leftChild() == node_a_in_2b4);
     if ( ! (is_node_x_not_found_in_2b4 &&
@@ -417,13 +429,13 @@ bool TestBSTree::testRemove() {
     // Удалить узел x
     tree_2c1.remove(x);
     // Проверить корректность удаления
-    BSTree<int, int>::Node* node_b_in_2c1 = tree_2c1.findNode(b);
+    BSTree<int, int>::Node* node_b_in_2c1 = tree_2c1._findNode(b);
     bool is_node_b_root_in_2c1 = (tree_2c1._rootNode() &&
                                   tree_2c1._rootNode() == node_b_in_2c1);
-    BSTree<int, int>::Node* node_d_in_2c1 = tree_2c1.findNode(d);
+    BSTree<int, int>::Node* node_d_in_2c1 = tree_2c1._findNode(d);
     bool is_node_d_left_child_of_b_in_2c1 = (node_d_in_2c1 &&
                                              node_b_in_2c1->leftChild() == node_d_in_2c1);
-    BSTree<int, int>::Node* node_a_in_2c1 = tree_2c1.findNode(a);
+    BSTree<int, int>::Node* node_a_in_2c1 = tree_2c1._findNode(a);
     bool is_node_a_left_child_of_d_in_2c1 = (node_a_in_2c1 &&
                                              node_d_in_2c1->leftChild() == node_a_in_2c1);
     if ( ! (is_node_b_root_in_2c1 &&
@@ -447,17 +459,17 @@ bool TestBSTree::testRemove() {
     tree_2c2.insert(x, x);
     tree_2c2.insert(a, a);
     tree_2c2.insert(b, b);
-    BSTree<int, int>::Node* node_x_in_2c2 = tree_2c2.findNode(x);
+    BSTree<int, int>::Node* node_x_in_2c2 = tree_2c2._findNode(x);
     node_x_in_2c2->setLeftChild(new BSTree<int, int>::Node(a, a));
     node_x_in_2c2->setRightChild(new BSTree<int, int>::Node(b, b));
     tree_2c2.remove(x);
-    BSTree<int, int>::Node* node_c_in_2c2 = tree_2c2.findNode(c);
+    BSTree<int, int>::Node* node_c_in_2c2 = tree_2c2._findNode(c);
     bool is_node_c_root_in_2c2 = (node_c_in_2c2 &&
                                   tree_2c2._rootNode() == node_c_in_2c2);
-    BSTree<int, int>::Node* node_b_in_2c2 = tree_2c2.findNode(b);
+    BSTree<int, int>::Node* node_b_in_2c2 = tree_2c2._findNode(b);
     bool is_node_b_right_child_of_c_in_2c2 = (node_b_in_2c2 &&
                                               node_c_in_2c2->rightChild() == node_b_in_2c2);
-    BSTree<int, int>::Node* node_a_in_2c2 = tree_2c2.findNode(a);
+    BSTree<int, int>::Node* node_a_in_2c2 = tree_2c2._findNode(a);
     bool is_node_a_left_chils_of_b_in_2c2 = (node_a_in_2c2 &&
                                              node_b_in_2c2->leftChild() == node_a_in_2c2);
     if (! (is_node_c_root_in_2c2 &&
@@ -511,24 +523,306 @@ bool TestBSTree::testClear() {
 }
 
 //-----------------------------------------------------------------------------
-bool TestBSTree::testArrayOperator() {
-    BSTree<int, int> tree;
-    tree[1] = 1;
-    if (1 != tree[1]) {
-        _notifyTestFailed();
-        return false;
-    }
+bool TestBSTree::testIterator() {
+    cout << "Running interator test..." << endl;
 
-    tree[1] = 0;
-    if (0 != tree[1]) {
-        _notifyTestFailed();
-        return false;
+    BSTree<int, int> tree;
+    tree.insert(1, 1);
+    tree.insert(2, 2);
+    tree.insert(3, 3);
+    tree.insert(4, 4);
+    tree.insert(5, 5);
+
+    BSTree<int, int>::iterator iter(&tree);
+    while (iter.isValid()) {
+        cout << " " << (*iter);
+        iter.next();
     }
+    cout << endl;
+    _testPassed();
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
+bool TestBSTree::testMaxDepth() {
+    cout << "Running MaxDepth test...";
+
+    BSTree<int, int> tree;
+    tree.insert(1, 1);
+    tree.insert(2, 2);
+    tree.insert(3, 3);
+    tree.insert(4, 4);
+    tree.insert(5, 5);
+
+    BSTree<int, int>::node_descriptor node_deepest_ds = tree._getNodeMaxDepth();
+    cout << "maxDepth: " << node_deepest_ds.level << endl;
+    cout << "key: " << node_deepest_ds.node->key() << endl;
 
     _testPassed();
     return true;
 }
 
+//-----------------------------------------------------------------------------
+void TestBSTree::runMainMenu() {
+    char chbuff;
+    int menuitem;
+    while (true) {
+        // Вывести пункты тестового меню
+        _paintMainMenu();
+
+        // Ожидать, пока пользователь выберет пункт меню
+        cout << endl << "Enter menu item number and hit <Enter>: ";
+        chbuff = getchar();
+
+        menuitem = atoi(&chbuff);
+        /* Отнимаем 1 от номера пункта меню, чтобы получить значение из перечисления
+         * TestBSTree::MainMenuActions */
+        --menuitem;
+        switch (menuitem) {
+        case ActionAddNode:
+            _menuActionAddNode();
+            break;
+
+        case ActionRemoveNode:
+            _menuActionRemoveNode();
+            break;
+
+        case ActionPrintAllNodes:
+            _menuActionPrintAllNodes();
+            break;
+
+        case ActionPrintNodesCount:
+            _menuActionPrintNodesCount();
+            break;
+
+        case ActionTestIsTreeEmpty:
+            _menuActionTestIsTreeEmpty();
+            break;
+
+        case ActionFindData:
+            _menuActionFindData();
+            break;
+
+        case ActionClearTree:
+            _menuActionClearTree();
+            break;
+
+        case ActionGetNodeMaxDepth:
+            _menuActionGetNodeMaxDepth();
+            break;
+
+        case ActionDumpTreeStructure:
+            _menuActionDumpTreeStructure();
+            break;
+
+//        case ActionExit:
+//            exit(0);
+//            break;
+        }
+    }
+
+}
+
+//-----------------------------------------------------------------------------
+/** Выводит на экран пункты меню с их номерами.
+ *
+ * Номера пунктов меню назначаются на основании числовых значений перечисления
+ * TestBSTree::MainMenuActions.
+ */
+void TestBSTree::_paintMainMenu() {
+    CLEAR_SCREEN();
+
+    /* Элементы перечисления TestBSTree::MainMenuActions нумеруются с 0,
+     * поэтому прибавляем 1 перед выводом номера пункта, чтобы нумерация
+     * в меню шла с 1. */
+
+    // 'Add node' menu item
+    cout << (ActionAddNode + 1) << ". " << MenuItemTitleActionAddNode << endl;
+
+    // 'Remove node' menu item
+    cout << (ActionRemoveNode + 1) << ". " << MenuItemTitleActionRemoveNode << endl;
+
+    // 'Print all nodes' menu item
+    cout << (ActionPrintAllNodes + 1) << ". " << MenuItemTitleActionPrintAllNodes << endl;
+
+    // 'Print nodes count' menu item
+    cout << (ActionPrintNodesCount + 1) << ". " << MenuItemTitleActionPrintNodesCount << endl;
+
+    // 'Test if tree is empty' menu item
+    cout << (ActionTestIsTreeEmpty + 1) << ". " << MenuItemTitleActionTestIsTreeEmpty << endl;
+
+    // 'Find data' menu item
+    cout << (ActionFindData + 1) << ". " << MenuItemTitleActionFindData << endl;
+
+    // 'Clear tree' menu item
+    cout << (ActionClearTree + 1) << ". " << MenuItemTitleActionClearTree << endl;
+
+    // 'Find deepest node' menu item
+    cout << (ActionGetNodeMaxDepth + 1) << ". " << MenuItemTitleActionGetNodeMaxDepth << endl;
+
+    // 'Dump tree structure menu item'
+    cout << (ActionDumpTreeStructure + 1) << ". " << MenuItemTitleActionDumpTreeStructure << endl;
+
+    // 'Exit' menu item
+//    cout << (ActionExit + 1) << ". " << MenuItemTitleActionExit << endl;
+}
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionAddNode() {
+    CLEAR_SCREEN();
+    cout << "Enter number(int): ";
+    int key;
+    cin >> key;
+    if(key) {
+        _tree_for_menu_test.insert(key, key);
+    }
+}
+
+
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionRemoveNode() {
+    CLEAR_SCREEN();
+    cout << "Enter number to remove(int): ";
+    int key;
+    cin >> key;
+    _tree_for_menu_test.remove(key);
+}
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionPrintAllNodes() {
+    CLEAR_SCREEN();
+    _tree_for_menu_test.print();
+
+    PAUSE();
+}
+
+
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionPrintNodesCount() {
+    CLEAR_SCREEN();
+    cout << _tree_for_menu_test.count() << " nodes found in tree." << endl;
+
+    PAUSE();
+}
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionTestIsTreeEmpty() {
+    CLEAR_SCREEN();
+    if (_tree_for_menu_test.isEmpty()) {
+        cout << "Tree IS EMPTY" << endl;
+    } else {
+        cout << "Tree IS NOT EMPTY" << endl;
+    }
+
+    PAUSE();
+}
+
+
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionFindData() {
+    CLEAR_SCREEN();
+    cout << "Enter number to find(int): ";
+    int key;
+    cin >> key;
+    BSTree<int, int>::Node* node = _tree_for_menu_test._findNode(key);
+    if (node) {
+        cout << "Key was found! Data: " << node->value() << endl;
+    } else {
+        cout << "Key was not found!" << endl;
+    }
+
+    PAUSE();
+}
+
+
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionClearTree() {
+    CLEAR_SCREEN();
+    _tree_for_menu_test.clear();
+    cout << "Tree was cleared!";
+
+    PAUSE();
+}
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionGetNodeMaxDepth() {
+    CLEAR_SCREEN();
+    BSTree<int, int>::node_descriptor ds = _tree_for_menu_test._getNodeMaxDepth();
+    if (ds.isValid()) {
+        cout << "Node found! Depth = " << ds.level << ", data = " << ds.node->value() << endl;
+    } else {
+        cout << "Node was not found! (Maybe tree is empty?)" << endl;
+    }
+
+    PAUSE();
+}
+
+//-----------------------------------------------------------------------------
+void TestBSTree::_menuActionDumpTreeStructure() {
+    CLEAR_SCREEN();
+
+    if(!_tree_for_menu_test.isEmpty()) {
+        /* Для вывода структуры дерева в консоли удобнее
+         * использовать префиксный порядок обхода */
+
+        BSTree<int, int>::Node* node = _tree_for_menu_test._rootNode();
+        stack< BSTree<int, int>::Node* > st;
+        while (!st.empty() || node != NULL) {
+            if (NULL != node) {
+                int depth = node->level();
+                if (0 < depth) {
+                    cout << string(depth-1, '|');
+                    char tip = ' ';
+                    if (node->isLeftChild()) {
+                        tip = 195;
+                    } else {
+                        tip = 192;
+                    }
+                    cout << tip;
+                }
+                cout << node->key();
+                if (node->isLeftChild()) {
+                    cout << " (LEFT CHILD)";
+                } else if (node->isRightChild()) {
+                    cout << " (RIGHT CHILD)";
+                }
+
+                cout << endl;
+
+                if (node->rightChild()) {
+                    st.push(node->rightChild());
+                }
+                node = node->leftChild();
+            } else {
+                    node = st.top();
+                    st.pop();
+                }
+            }
+//            depth = iter.nodeDepth();
+//            cout << string(depth, '|')
+//                 << (char) 195
+//                 << " "
+//                 << iter.key()
+//                 << endl;
+
+    } else {
+        cout << "Tree is empty!" << endl;
+    }
+
+    PAUSE();
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
