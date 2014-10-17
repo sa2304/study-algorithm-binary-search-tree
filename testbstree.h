@@ -4,6 +4,7 @@
 #include "bstree.h"
 #include <iostream>
 #include <cstdlib>
+#include <string>
 
 #define CLEAR_SCREEN() system("cls")
 #define PAUSE() system("pause")

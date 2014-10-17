@@ -534,7 +534,7 @@ bool TestBSTree::testIterator() {
     tree.insert(5, 5);
 
     BSTree<int, int>::iterator iter(&tree);
-    while (iter.isValid()) {
+    while (!iter.atEnd()) {
         cout << " " << (*iter);
         iter.next();
     }

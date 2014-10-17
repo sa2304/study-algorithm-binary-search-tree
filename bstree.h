@@ -398,8 +398,8 @@ private:
         {  }
 
         //---------------------------------------------------------------------
-        bool isValid() {
-            return (NULL == node);
+        bool isValid() const {
+            return (NULL != node);
         }
     };
     ///////////////////////////////////////////////////////////////////////
@@ -408,14 +408,14 @@ private:
         node_descriptor desc;
         if(!isEmpty()) {
             iterator iter(this);
-            while (iter.isValid()) {
-                Node* node = iter._currentNodePointer();
+            Node* node = NULL;
+            while (!iter.atEnd()) {
+                node = iter._lastSeenNode();
                 int node_level = node->level();
                 if (desc.level < node_level) {
                     desc.node = node;
                     desc.level = node_level;
                 }
-
                 iter.next();
             }
         }
@@ -517,12 +517,10 @@ public:
     void print() {
         if (!isEmpty()) {
             iterator iter(this);
-            while(iter.hasNext()) {
+            while(!iter.atEnd()) {
                 cout << iter.key() << ": " << iter.value() << endl;
                 iter.next();
             };
-            // Вывод последнего узла
-            cout << iter.key() << ": " << iter.value() << endl;
         }
     }
 
@@ -599,34 +597,52 @@ public:
         //---------------------------------------------------------------------
         /** Перемещает итератор к следующему узлу, если он доступен
          *
-         * Вызов next() для итератора, который уже указывает на последний узел,
-         * ни к чему не приводит */
+         * Итератор будет продвигаться вперед, пока не достигнет последнего
+         * узла, после чего вызов next() переведет итератор в состояние,
+         * когда он "указывает в позицию за последним элементом". В этом
+         * состоянии метод atEnd() будет возвращать значение TRUE.
+         * Это позволяет клиентскому коду объявлять конструкции вида
+         *
+         * while (!iter.atEnd()) { [Proceed elements...] }
+         *
+         * @see atEnd()
+         */
         void next() {
-            if (hasNext()) {
-                // Спускаться по левой ветви до конца
-                while (_currentNodePointer() != NULL) {
-                    _st_nodes_ahead.push(_currentNodePointer());
-                    _setCurrentNodePointer(_currentNodePointer()->leftChild());
-                }
+            if (!atEnd()) {
+                if (hasNext()) {
+                    // Спускаться по левой ветви до конца
+                    while (_currentNodePointer() != NULL) {
+                        _st_nodes_ahead.push(_currentNodePointer());
+                        _setCurrentNodePointer(_currentNodePointer()->leftChild());
+                    }
 
-                Node* node = NULL;
-                if (!_st_nodes_ahead.empty()) {
-                    // Снять со стека следующий узел
-                    _setCurrentNodePointer(_st_nodes_ahead.top());
-                    _st_nodes_ahead.pop();
+                    Node* node = NULL;
+                    if (!_st_nodes_ahead.empty()) {
+                        // Снять со стека следующий узел
+                        _setCurrentNodePointer(_st_nodes_ahead.top());
+                        _st_nodes_ahead.pop();
 
-                    // Отметить его как текущий для клиента
-                    node = _currentNodePointer();
-                    _setLastSeenNode(node);
+                        // Отметить его как текущий для клиента
+                        node = _currentNodePointer();
+                        _setLastSeenNode(node);
 
-                    // Переместить внутренний указатель итератора далее для обхода правого поддерева
-                    _setCurrentNodePointer(_currentNodePointer()->rightChild());
+                        // Переместить внутренний указатель итератора далее для обхода правого поддерева
+                        _setCurrentNodePointer(_currentNodePointer()->rightChild());
+                    }
+                } else {
+                    _setLastSeenNode(NULL);
                 }
             }
         }
+        //---------------------------------------------------------------------
+        bool atEnd() const {
+            return (_lastSeenNode() == NULL) &&
+                    !hasNext();
+
+        }
 
         //---------------------------------------------------------------------
-        /** Возвращает TRUE, если доступ к итератору корректенб иначе - FALSE
+        /** Возвращает TRUE, если доступ к итератору корректен, иначе - FALSE
          *
          * Метод не является индикатором конца итератора, то есть конструкция
          *
