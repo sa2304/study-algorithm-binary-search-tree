@@ -4,9 +4,11 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    testbstree.cpp
+    testbstree.cpp \
+    mainmenu.cpp
 
 HEADERS += \
     bstree.h \
-    testbstree.h
+    testbstree.h \
+    mainmenu.h
 

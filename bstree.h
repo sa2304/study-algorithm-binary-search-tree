@@ -6,6 +6,9 @@
 #include <stack>
 using namespace std;
 
+// Исключения, используемые классом
+#define EXCPT_MISSING_KEY -1
+
 template <class TKey, class TValue>
 class BSTree {
 private:
@@ -199,7 +202,12 @@ private:
 
     };
 
+    /** Корень дерева */
     Node* _root;
+
+    /** Счетчик узлов - для оптимального вызова count().
+     * Должен увеличивается/уменьшается при вставке/удалении каждого узла */
+    int _cnt_nodes;
 
     //---------------------------------------------------------------------
     /** Возвращает указатель на узел с наименьщим значением ключа из всех узлов поддерева с корнем root
@@ -271,9 +279,14 @@ private:
             // и поместить его на место удаляемого.
             else if (has_both_children) {
                 Node* node_replacement = _findNodeWithSmallestKey(node_to_remove->rightChild());
-                /* Узел с наименьшим значением ключа - лист. Чтобы отделить его от ветки дерева,
-                         * обнулим указатель на него в родителе */
-                node_replacement->parent()->unlinkChild(node_replacement);
+                /* Узел с наименьшим значением ключа не имеет левого потомка:
+                 * однако он может иметь правое поддерево. Чтобы корректно
+                 * отделить его от ветки дерева, необходимо заменить указатель
+                 * на перемещаемый узел в родителе указателем на правого потомка перемещаемого узла.
+                 * Если потомка нет, указатель будет обнулен (замещен значением NULL)
+                 */
+                node_replacement->parent()->replaceChild(node_replacement,
+                                                         node_replacement->rightChild());
                 // Помещаем узел на место удаляемого, связывая его с потомками
                 node_replacement->setLeftChild(node_to_remove->leftChild());
                 node_replacement->setRightChild(node_to_remove->rightChild());
@@ -304,6 +317,9 @@ private:
 
             // После внесения необходимых изменений в структуру дерева узел уничтожается
             delete node_to_remove;
+
+            // Уменьшить счетчик узлов
+            _decrementCachedNodesCount();
         }
     }
 
@@ -340,37 +356,6 @@ private:
         return node_next;
     }
 
-    //---------------------------------------------------------------------
-    /** Производит вставку указанного узла в поддерево с корнем node_root
-     *
-     * Метод последовательно спускается по узлам дерева в поиске подходящего места
-     * для нового узла на основе значения его ключа */
-    void _insertNode(Node* node_to_insert, Node* node_root) {
-        // Если ключ нового узла меньше ключа вершины поддерева
-        if (node_to_insert->key() < node_root->key()) {
-            // и левое поддерево отсутствует
-            if (!node_root->leftChild()) {
-                // сделать новый узел новым корнем левого поддерева
-                node_root->setLeftChild(node_to_insert);
-            }
-            // Иначе продолжить поиск позиции для вставки по левому поддереву
-            else {
-                _insertNode(node_to_insert, node_root->leftChild());
-            }
-        }
-        // Если ключ нового узла больше ключа вершины поддерева
-        else if (node_root->key() < node_to_insert->key()) {
-            // и правое поддерево отсутствует
-            if (!node_root->rightChild()) {
-                // сделать новый узел новым корнем правого поддерева
-                node_root->setRightChild(node_to_insert);
-            }
-            else {
-                // Иначе продолжить поиск позиции для вставки по правому поддереву
-                _insertNode(node_to_insert, node_root->rightChild());
-            }
-        }
-    }
 
     //---------------------------------------------------------------------
     /** Возвращает число узлов в поддереве с корнем root */
@@ -424,11 +409,35 @@ private:
     }
 
     //---------------------------------------------------------------------
+    int _cachedNodesCount() const {
+        return _cnt_nodes;
+    }
+
     //---------------------------------------------------------------------
+    void _incrementCachedNodesCount() {
+        ++_cnt_nodes;
+    }
+
     //---------------------------------------------------------------------
+    void _decrementCachedNodesCount() {
+        --_cnt_nodes;
+    }
+
+    //---------------------------------------------------------------------
+    void _resetCachedNodesCount() {
+        _cnt_nodes = 0;
+    }
+
+    //---------------------------------------------------------------------
+
 public:
+    enum Exceptions {
+        ExcptAccessToMissingKey
+    };
+
     BSTree()
-        : _root(NULL)
+        : _root(NULL),
+          _cnt_nodes(0)
     {
     }
 
@@ -444,38 +453,50 @@ public:
     }
 
     //---------------------------------------------------------------------
-    /** Производит вставку в дерево нового узла, создав его и присвоив ему указанные ключ и значение */
+    /** Производит вставку в дерево нового узла, создав его и присвоив ему указанные ключ и значение
+     *
+     * Если узел с заданным ключом уже существует, присваивает ему указанное значение */
     void insert(const TKey & key, const TValue & value) {
-        Node* node_to_insert = new Node(key, value);
-        node_to_insert->setKey(key);
-        node_to_insert->setValue(value);
-        // Если в дереве еще нет узлов, новый узел станет корнем
-        if (isEmpty()) {
-            _root = node_to_insert;
-        }
-        else {
-            /* Найти позицию для вставки новоло узла:
+        Node* node_existing = NULL;
+        /* Если указанный ключ уже присутствует в дереве */
+        if ( (node_existing = _findNode(key)) != NULL ) {
+            node_existing->setValue(value);
+            /* Иначе создаем новый узел и вставляем его */
+        } else {
+            Node* node_to_insert = new Node(key, value);
+            node_to_insert->setKey(key);
+            node_to_insert->setValue(value);
+            // Если в дереве еще нет узлов, новый узел станет корнем
+            if (isEmpty()) {
+                _root = node_to_insert;
+            }
+            else {
+                /* Найти позицию для вставки новоло узла:
              * узлы двоичного дерева поиска упорядочены так, что ключ любого
              * родительского узла больше ключа любого узла-потомка из левой ветки
              * и меньше ключа любого узла-потомка из правой ветки. */
-            Node* next_node = _root;
-            Node* parent = NULL;
-            while (next_node) {
-                parent = next_node;
-                if (next_node->key() < node_to_insert->key()) {
-                    next_node = next_node->rightChild();
+                Node* next_node = _root;
+                Node* parent = NULL;
+                while (next_node) {
+                    parent = next_node;
+                    if (next_node->key() < node_to_insert->key()) {
+                        next_node = next_node->rightChild();
+                    }
+                    else {
+                        next_node = next_node->leftChild();
+                    }
+                }
+
+                if (node_to_insert->key() < parent->key()) {
+                    parent->setLeftChild(node_to_insert);
                 }
                 else {
-                    next_node = next_node->leftChild();
+                    parent->setRightChild(node_to_insert);
                 }
             }
 
-            if (node_to_insert->key() < parent->key()) {
-                parent->setLeftChild(node_to_insert);
-            }
-            else {
-                parent->setRightChild(node_to_insert);
-            }
+            /* Увеличить счетчик узлов после того, как была произведена вставка нового узла */
+            _incrementCachedNodesCount();
         }
     }
 
@@ -500,8 +521,8 @@ public:
     //---------------------------------------------------------------------
     /** Возвращает количество узлов в дереве */
     int count() const {
-        /* Используется вызов рекурсивной функции */
-        return _countNodes(_rootNode());
+        /* Вернуть текущее значение счетчика */
+        return _cachedNodesCount();
     }
 
     //---------------------------------------------------------------------
@@ -510,6 +531,9 @@ public:
         while (_root) {
             _removeNode(_root);
         }
+
+        /* Обнулить счетчик узлов */
+        _resetCachedNodesCount();
     }
 
     //---------------------------------------------------------------------
@@ -525,8 +549,85 @@ public:
     }
 
     //---------------------------------------------------------------------
+    /** Возвращает данные, ассоциированные с заданнымм ключом
+     *
+     * Выбрасывает исключение, если данные для ключа отсутствуют
+     * (ключ неинициализирован) */
+    TValue data(TKey key) {
+        Node* node = _findNode(key);
+        /* Если ключ неинициализирован */
+        if (!node) {
+            /* Выбросить исключение */
+            throw ExcptAccessToMissingKey;
+        }
+
+        /* Вернуть данные */
+        return node->value();
+    }
+
     //---------------------------------------------------------------------
+    /** "Отдадочный" метод, выводящий на экран информацию о максимальной глубине дерева */
+    void dbgPrintMaxDepthInfo() {
+        node_descriptor ds = _getNodeMaxDepth();
+        if (ds.isValid()) {
+            cout << "Max tree depth = " << ds.level << endl;
+            cout << "Deepest node is ['"
+                 << ds.node->key()
+                 << "', '"
+                 << ds.node->value()
+                 << "']"
+                 << endl;
+        }
+        else {
+            cout << "Tree is empty!" << endl;
+        }
+    }
+
     //---------------------------------------------------------------------
+    /** "Отладочный" метод, выводщий на экран структуру дерева */
+    void dbgDumpTreeStructure() {
+        if(!isEmpty()) {
+            /* Для вывода структуры дерева в консоли удобнее
+             * использовать префиксный порядок обхода */
+
+            Node* node = _rootNode();
+            stack< Node* > st;
+            while (!st.empty() || node != NULL) {
+                if (NULL != node) {
+                    int depth = node->level();
+                    if (0 < depth) {
+                        cout << string(depth-1, '|');
+                        char tip = ' ';
+                        if (node->isLeftChild()) {
+                            tip = 195;
+                        } else {
+                            tip = 192;
+                        }
+                        cout << tip;
+                    }
+                    cout << node->key();
+                    if (node->isLeftChild()) {
+                        cout << " (LEFT CHILD)";
+                    } else if (node->isRightChild()) {
+                        cout << " (RIGHT CHILD)";
+                    }
+
+                    cout << endl;
+
+                    if (node->rightChild()) {
+                        st.push(node->rightChild());
+                    }
+                    node = node->leftChild();
+                } else {
+                        node = st.top();
+                        st.pop();
+                    }
+                }
+        } else {
+            cout << "Tree is empty!" << endl;
+        }
+    }
+
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "mainmenu.h"
 #include "testbstree.h"
 using namespace std;
 
@@ -14,8 +15,8 @@ static BSTree<int, int> tree;
 //-----------------------------------------------------------------------------
 int main()
 {
-    TestBSTree test;
-    test.runMainMenu();
+    MainMenu main_menu;
+    main_menu.run();
     PAUSE();
 
     return 0;
